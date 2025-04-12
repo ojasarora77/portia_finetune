@@ -7,20 +7,43 @@ from portia import (
 )
 from portia.open_source_tools.registry import example_tool_registry
 
+# If you want to define custom tools, first check the available classes
+# Try to inspect what's available in the portia package
+import portia
+print(dir(portia))  # This will print all available attributes in the portia module
+
 load_dotenv()
 
-# Load the default config with specified storage and logging options
+# Configure Portia
 my_config = Config.from_default(
     storage_class=StorageClass.DISK, 
-    storage_dir='demo_runs', # Amend this based on where you'd like your plans and plan runs saved!
+    storage_dir='blockchain_runs',
     default_log_level=LogLevel.DEBUG,
-    )
+)
 
-# Instantiate a Portia instance. Load it with the default config and with some example tools
+# For now, let's just use the example tools
 portia = Portia(config=my_config, tools=example_tool_registry)
 
-# Execute the plan run from the user query
-output = portia.run('Which stock price grew faster in 2024, Amazon or Google?')
+# First, generate a plan for analyzing a smart contract
+sample_contract = """
+contract Test { 
+    function transfer() public { 
+        msg.sender.transfer(100); 
+    } 
+}
+"""
 
-# Serialise into JSON and print the output
-print(output.model_dump_json(indent=2))
+contract_analysis_plan = portia.plan(
+    f"Analyze this Solidity smart contract for security vulnerabilities: {sample_contract}"
+)
+
+# Print the plan to see the steps
+print("Smart Contract Analysis Plan:")
+print(contract_analysis_plan.model_dump_json(indent=2))
+
+# Then execute the plan if you want
+plan_run = portia.run_plan(contract_analysis_plan)
+
+# Print the results
+print("\nPlan Execution Results:")
+print(plan_run.model_dump_json(indent=2))
